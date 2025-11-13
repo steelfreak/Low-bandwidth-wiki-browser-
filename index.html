@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="lg">
+<head>
+<meta charset="UTF-8">
+<title>Luganda Wiki Lite</title>
+<style>
+    body {
+        font-family: sans-serif;
+        margin: 10px;
+        background: #fafafa;
+    }
+    #searchBox {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+    }
+    #content {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+</style>
+</head>
+<body>
+
+<h2>Luganda Wikipedia Lite</h2>
+<input id="searchBox" placeholder="Wandiika erinnya ly'ekitundu..." />
+
+<div id="content">Wandika erinnya ly'ekitundu okunoŋŋera.</div>
+
+<script>
+async function loadPage(title) {
+    const url = `https://lg.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(title)}&format=json&origin=*`;
+    
+    // Check cache
+    const cached = localStorage.getItem(title);
+    if (cached) {
+        document.getElementById("content").innerHTML = cached;
+    }
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        let html = data.parse.text["*"];
+
+        // Create DOM
+        let div = document.createElement("div");
+        div.innerHTML = html;
+
+        // Remove heavy elements
+        div.querySelectorAll(".infobox, table, img, .reference, .mw-editsection, .navbox")
+           .forEach(el => el.remove());
+
+        // Save lightweight version to cache
+        localStorage.setItem(title, div.innerHTML);
+
+        // Show it
+        document.getElementById("content").innerHTML = div.innerHTML;
+
+    } catch (e) {
+        document.getElementById("content").innerHTML = "Tekisobose okutikka bye wasiiga.";
+    }
+}
+
+// Search input
+document.getElementById("searchBox").addEventListener("keyup", e => {
+    if (e.key === "Enter") loadPage(e.target.value);
+});
+</script>
+
+</body>
+</html>
